@@ -254,7 +254,17 @@ export default function MusicPlayer({
           ref={iframeRef}
           width="320"
           height="180"
-          style={{ position: 'absolute', left: '-9999px', opacity: 0.01, pointerEvents: 'none' }}
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            zIndex: 50,
+            background: '#000',
+            border: 'none',
+            display: 'block',
+            // Only show on mobile, hide on desktop
+            // Use a CSS class for better control in production
+          }}
           src={`https://www.youtube.com/embed/${currentSong.videoId}?enablejsapi=1&autoplay=${isPlaying ? 1 : 0}`}
           allow="autoplay"
           title="YouTube Audio Player"
