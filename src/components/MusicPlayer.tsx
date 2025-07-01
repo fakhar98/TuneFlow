@@ -46,6 +46,7 @@ export default function MusicPlayer({
   const [isShuffle, setIsShuffle] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showYouTube, setShowYouTube] = useState(false);
 
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
@@ -121,6 +122,16 @@ export default function MusicPlayer({
       'https://www.youtube.com'
     );
   }, [isPlaying, currentSong]);
+
+  // Sync volume with YouTube player
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: 'setVolume', args: [Math.round(volume * 100)] }),
+        'https://www.youtube.com'
+      );
+    }
+  }, [volume]);
 
   if (!currentSong) {
     return (
@@ -220,51 +231,78 @@ export default function MusicPlayer({
           <span className="text-gray-400 text-sm">
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
-          
-          <div 
-            className="relative"
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            onMouseLeave={() => setShowVolumeSlider(false)}
-          >
+          <div className="flex items-center space-x-2">
+            <button
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+              onClick={() => setVolume((v) => Math.max(0, v - 0.1))}
+              aria-label="Decrease volume"
+            >
+              -
+            </button>
             <button className="p-2 text-gray-400 hover:text-white transition-colors">
               <Volume2 className="w-5 h-5" />
             </button>
-            
-            {showVolumeSlider && (
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2">
-                <div 
-                  ref={volumeRef}
-                  className="w-20 h-1 bg-gray-600 rounded-full cursor-pointer"
-                  onClick={handleVolumeClick}
-                >
-                  <div 
-                    className="h-full bg-white rounded-full"
-                    style={{ width: `${volume * 100}%` }}
-                  />
-                </div>
-              </div>
-            )}
+            <button
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+              onClick={() => setVolume((v) => Math.min(1, v + 0.1))}
+              aria-label="Increase volume"
+            >
+              +
+            </button>
           </div>
+          {/* ...existing volume slider... */}
+          {showVolumeSlider && (
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2">
+              <div 
+                ref={volumeRef}
+                className="w-20 h-1 bg-gray-600 rounded-full cursor-pointer"
+                onClick={handleVolumeClick}
+              >
+                <div 
+                  className="h-full bg-white rounded-full"
+                  style={{ width: `${volume * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* YouTube Iframe Toggle Button */}
+      <div className="fixed bottom-48 right-4 z-50">
+        <button
+          onClick={() => setShowYouTube((prev) => !prev)}
+          className="px-4 py-2 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-all"
+        >
+          {showYouTube ? 'Hide Player' : 'Show Player'}
+        </button>
+      </div>
       {/* YouTube Iframe for audio playback */}
       {currentSong && (
         <iframe
           ref={iframeRef}
           width="320"
           height="180"
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            zIndex: 50,
-            background: '#000',
-            border: 'none',
-            display: 'block',
-            // Only show on mobile, hide on desktop
-            // Use a CSS class for better control in production
-          }}
+          style={showYouTube
+            ? {
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                zIndex: 50,
+                background: '#000',
+                border: 'none',
+                display: 'block',
+              }
+            : {
+                position: 'absolute',
+                left: '-9999px',
+                opacity: 0.01,
+                pointerEvents: 'none',
+                background: '#000',
+                border: 'none',
+                display: 'block',
+              }
+          }
           src={`https://www.youtube.com/embed/${currentSong.videoId}?enablejsapi=1&autoplay=${isPlaying ? 1 : 0}`}
           allow="autoplay"
           title="YouTube Audio Player"
