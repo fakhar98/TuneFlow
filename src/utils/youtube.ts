@@ -1,6 +1,6 @@
-// YouTube API configuration
-const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
+const API_KEY = "AIzaSyBSYi6H3jYyVaV_kB3LY8qMDiTWiQeKaPw"; 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
+
 
 export interface YouTubeVideo {
   id: {
@@ -30,36 +30,34 @@ export interface Song {
   videoId: string;
 }
 
-// Search YouTube videos
+// Search YouTube videos (with CORS proxy for testing)
 export async function searchYouTubeVideos(query: string): Promise<Song[]> {
   if (!API_KEY) {
     // Return mock data for demo purposes
     return getMockSongs(query);
   }
 
+  // Use a public CORS proxy for browser testing (not for production)
+  const proxy = '';
+
   try {
     const searchResponse = await fetch(
-      `${BASE_URL}/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=12&key=${API_KEY}`
+      `${proxy}${BASE_URL}/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=12&key=${API_KEY}`
     );
-    
     if (!searchResponse.ok) {
       throw new Error('Failed to search videos');
     }
-    
     const searchData = await searchResponse.json();
     const videoIds = searchData.items.map((item: YouTubeVideo) => item.id.videoId).join(',');
     
     // Get video durations
     const detailsResponse = await fetch(
-      `${BASE_URL}/videos?part=contentDetails&id=${videoIds}&key=${API_KEY}`
+      `${proxy}${BASE_URL}/videos?part=contentDetails&id=${videoIds}&key=${API_KEY}`
     );
-    
     if (!detailsResponse.ok) {
       throw new Error('Failed to get video details');
     }
-    
     const detailsData = await detailsResponse.json();
-    
     return searchData.items.map((item: YouTubeVideo, index: number) => {
       const duration = detailsData.items[index]?.contentDetails?.duration || 'PT3M30S';
       return {
@@ -75,6 +73,23 @@ export async function searchYouTubeVideos(query: string): Promise<Song[]> {
     console.error('Error searching YouTube:', error);
     return getMockSongs(query);
   }
+}
+
+// Simple YouTube search (minimal fields, custom API key)
+export async function searchYouTubeVideosSimple(query: string, apiKey: string): Promise<Pick<Song, 'id' | 'title' | 'thumbnail'>[]> {
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=12&key=${apiKey}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Failed to search videos");
+  }
+
+  const data = await res.json();
+  return data.items.map((item: any) => ({
+    id: item.id.videoId,
+    title: item.snippet.title,
+    thumbnail: item.snippet.thumbnails.high.url,
+  }));
 }
 
 // Format ISO 8601 duration to MM:SS

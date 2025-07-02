@@ -46,7 +46,6 @@ export default function MusicPlayer({
   const [isShuffle, setIsShuffle] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -251,8 +250,8 @@ export default function MusicPlayer({
       {currentSong && (
         <iframe
           ref={iframeRef}
-          width="160"
-          height="90"
+          width="320"
+          height="180"
           style={{ position: 'fixed', bottom: 100, right: 16, zIndex: 50, border: '2px solid #fff', borderRadius: 12, background: '#000' }}
           src={`https://www.youtube.com/embed/${currentSong.videoId}?enablejsapi=1&autoplay=${isPlaying ? 1 : 0}`}
           allow="autoplay"

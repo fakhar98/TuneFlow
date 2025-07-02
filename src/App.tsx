@@ -16,13 +16,14 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   // Search for songs
   const handleSearch = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
       const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-      const results = await searchYouTubeVideos(query);
+      const results = await searchYouTubeVideos(query, apiKey);
       setSearchResults(results);
     } catch (error) {
       console.error('Search failed:', error);
