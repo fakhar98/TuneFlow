@@ -46,6 +46,9 @@ export default function MusicPlayer({
   const [isShuffle, setIsShuffle] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+  const [iframeToggle, setIframeToggle] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -119,6 +122,18 @@ export default function MusicPlayer({
       '*'
     );
   }, [isPlaying, currentSong]);
+
+  // Show/hide iframe based on window width
+  useEffect(() => {
+    const checkWidth = () => {
+      const mobile = window.innerWidth < 800;
+      setIsMobile(mobile);
+      setShowIframe(mobile ? true : iframeToggle);
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, [iframeToggle]);
 
   if (!currentSong) {
     return (
@@ -244,10 +259,20 @@ export default function MusicPlayer({
             )}
           </div>
         </div>
+
+        {/* Iframe toggle for desktop */}
+        {!isMobile && (
+          <button
+            onClick={() => setIframeToggle(t => !t)}
+            className="ml-4 px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+          >
+            {showIframe ? 'Hide Video' : 'Show Video'}
+          </button>
+        )}
       </div>
 
       {/* YouTube Iframe for audio playback */}
-      {currentSong && (
+      {currentSong && showIframe && (
         <iframe
           ref={iframeRef}
           width="320"
